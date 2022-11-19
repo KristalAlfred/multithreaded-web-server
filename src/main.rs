@@ -12,11 +12,13 @@ fn main() {
 
     let pool = ThreadPool::new(10);
 
-    listener.incoming().for_each(|stream| {
+    listener.incoming().take(2).for_each(|stream| {
         pool.execute(|| {
             handle_connection(stream.unwrap());
         });
     });
+
+    println!("Shutting down.");
 }
 
 fn handle_connection(mut stream: TcpStream) {
