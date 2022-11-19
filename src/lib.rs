@@ -73,6 +73,7 @@ impl Worker {
                 }
                 Err(_) => {
                     println!("Worker {id} disconnected. Shutting down!");
+                    break;
                 }
             }
         });
