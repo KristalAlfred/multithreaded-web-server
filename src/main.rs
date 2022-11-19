@@ -5,12 +5,17 @@ use std::{
     thread, 
     time::Duration
 };
+use multithreaded_web_server::ThreadPool;
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
 
+    let pool = ThreadPool::new(10);
+
     listener.incoming().for_each(|stream| {
-        handle_connection(stream.unwrap());
+        pool.execute(|| {
+            handle_connection(stream.unwrap());
+        });
     });
 }
 
@@ -22,6 +27,7 @@ fn handle_connection(mut stream: TcpStream) {
     let (status_line, filename) = match &request_line[..] {
         "GET / HTTP/1.1" => ("HTTP/1.1 200 OK", "index.html"),
         "GET /sleep HTTP/1.1" => {
+            println!("Will sleep now for 5 seconds.");
             thread::sleep(Duration::from_secs(5));
             ("HTTP/1.1 200 OK", "index.html")
         }
@@ -32,5 +38,4 @@ fn handle_connection(mut stream: TcpStream) {
     let length = html.len();
     let response = format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{html}");
     stream.write_all(response.as_bytes()).unwrap();
-    
 }
